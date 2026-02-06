@@ -24,11 +24,15 @@ def enroll_new_device(device_id):
         print(f"Successfully enrolled {name}.")
 
 def on_message(client, userdata, msg):
-    device_id = msg.topic.split('/')[-1]
-    
-    if device_id == self_id:
-        return
     try:
+        # Somewhat fragile due to being dependent on a specific MQTT format
+        parts = msg.topic.split('/')
+        
+        if len(parts) < 4:
+            return
+        
+        device_id = parts[-2]
+        
         data = json.loads(msg.payload.decode())
         distance = data.get("distance", 99)
 
@@ -37,11 +41,13 @@ def on_message(client, userdata, msg):
         
         if device_id not in db and distance < enrolldist:
             enroll_new_device(device_id)
-    except: pass
+    except Exception as e:
+        print("Error in on_message:", e)
 
 client = mqtt.Client()
 client.on_message = on_message
 client.connect(mqttbroker, 1883)
 client.subscribe("espresense/devices/#")
-print("Hold phone near sensor to enroll...")
+print("Hold phone near sensor to enroll... Press Ctrl+C to stop.")
 client.loop_forever()
+
