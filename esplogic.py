@@ -20,6 +20,7 @@ def on_message(client, userdata, msg):
         
         if device_id in db:
             # parses mqtt topic for device id
+            # note that this is fragile due to being dependent on a specific MQTT topic format (espresense/devices/(device id)/(node_id)
             student_name = db[device_id]
             data = json.loads(msg.payload.decode())
             dist = data.get("distance", 99)
@@ -46,3 +47,4 @@ client.subscribe("espresense/devices/+/94cf49")
 
 print("Monitoring presense (Ctrl+C to stop).")
 client.loop_forever()
+
